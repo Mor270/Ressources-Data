@@ -1,0 +1,16 @@
+   55  git commit -m "Ajout reference SQL"
+   56  git push
+   57  cd ~/Desktop/portfolio-pro
+   58  git add . 
+   59   git commit -m "Completer reference Power BI"
+   60  git push
+   61  cd ~/Desktop/portfolio-pro\ntouch .nojekyll\ngit add .\ngit commit -m "Desactiver Jekyll pour GitHub Pages"\ngit push
+   62  cd ~/Desktop/portfolio-pro puis git add . puis git commit -m "Ajout section scikit-learn"
+   63  git push
+   64  git add .
+   65  cd ~/Desktop/portfolio-pro
+   66   git add .
+   67  git commit -m "Ajout section scikit-learn"
+   68  git push
+   69  git rm nojekyll\ngit commit -m "Nettoyage fichier en trop"\ngit push
+   70  history
