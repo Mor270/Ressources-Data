@@ -1,0 +1,41 @@
+name: CD - Deployer sur GitHub Pages
+
+# Se déclenche à chaque push sur main (une fois le code déjà validé par CI),
+# et peut aussi être lancé manuellement depuis l'onglet Actions
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Permissions nécessaires pour publier sur GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Empêche deux déploiements de se chevaucher
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  deployer:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Récupérer le code du dépôt
+        uses: actions/checkout@v4
+
+      - name: Configurer GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Préparer le site à publier (tout le dossier, tel quel)
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'
+
+      - name: Publier sur GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

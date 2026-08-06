@@ -1,0 +1,42 @@
+name: CI - Validation du code
+
+# Se déclenche à chaque push sur main, et sur chaque pull request visant main
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  valider:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Récupérer le code du dépôt
+        uses: actions/checkout@v4
+
+      - name: Vérifier la présence des fichiers essentiels du site
+        run: |
+          test -f index.html && echo "✓ index.html présent"
+          test -f style.css && echo "✓ style.css présent"
+          test -f script.js && echo "✓ script.js présent"
+
+      - name: Installer Node.js (nécessaire pour l'outil de validation)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Installer htmlhint
+        run: npm install -g htmlhint
+
+      - name: Valider la syntaxe de index.html
+        run: htmlhint index.html
+
+      - name: Vérifier qu'il n'y a pas de liens cassés vers des fichiers locaux
+        run: |
+          for lien in $(grep -oE 'href="[^"#][^"]*\.(html|css|js|md)"' index.html | sed -E 's/href="([^"]*)"/\1/'); do
+            if [ ! -f "$lien" ]; then
+              echo "❌ Fichier référencé introuvable : $lien"
+              exit 1
+            fi
+          done
+          echo "✓ Tous les liens locaux pointent vers des fichiers existants"
