@@ -455,6 +455,92 @@ ul { margin: 0; padding: 0; list-style: none; }
 }
 
 /* ============================================
+   Activité GitHub
+   ============================================ */
+.activity-intro {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--text-dim);
+}
+
+.github-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  border-top: 1px solid rgba(27, 33, 41, 0.12);
+  border-left: 1px solid rgba(27, 33, 41, 0.12);
+  margin: 30px 0 40px;
+}
+
+.gh-stat {
+  padding: 22px 18px;
+  border-right: 1px solid rgba(27, 33, 41, 0.12);
+  border-bottom: 1px solid rgba(27, 33, 41, 0.12);
+}
+
+.gh-stat-value {
+  display: block;
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: clamp(1.3rem, 2.4vw, 1.7rem);
+  color: var(--signal-blue);
+  margin-bottom: 6px;
+}
+
+.gh-stat-label {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--text-dim);
+}
+
+@media (max-width: 640px) {
+  .github-stats { grid-template-columns: repeat(2, 1fr); }
+}
+
+.repo-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 32px;
+}
+
+.repo-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  border: 1px solid rgba(27, 33, 41, 0.12);
+  border-radius: 10px;
+  text-decoration: none;
+  color: var(--text-dark);
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.repo-item:hover, .repo-item:focus-visible {
+  border-color: var(--signal-blue);
+  transform: translateY(-1px);
+}
+
+.repo-name {
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.repo-desc {
+  font-size: 0.82rem;
+  color: var(--text-dim);
+  margin-top: 2px;
+}
+
+.repo-meta {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--signal-blue);
+  white-space: nowrap;
+}
+
+/* ============================================
    Contact
    ============================================ */
 .section-contact { text-align: center; }
