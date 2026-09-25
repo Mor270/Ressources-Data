@@ -1,0 +1,838 @@
+<title>Grammaire DAX</title>
+<style>
+  :root{
+    --bg: #faf8f3;
+    --surface: #ffffff;
+    --surface-alt: #f2efe6;
+    --border: #e2ddcf;
+    --ink: #211f1a;
+    --ink-soft: #625d4f;
+    --ink-faint: #8a8471;
+    --accent: #b3591f;
+    --accent-soft: #f0ddc8;
+    --accent-ink: #7a3c12;
+    --replace: #a2431f;
+    --add: #3f6e4e;
+    --code-bg: #211f1a;
+    --code-ink: #f1ead9;
+    --code-accent: #e0a458;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg: #17150f;
+      --surface: #201d16;
+      --surface-alt: #29251b;
+      --border: #3a3527;
+      --ink: #f1ead9;
+      --ink-soft: #c7bfa8;
+      --ink-faint: #948c74;
+      --accent: #e0a458;
+      --accent-soft: #3a2f1c;
+      --accent-ink: #f0c690;
+      --replace: #e08a5c;
+      --add: #7cbf94;
+      --code-bg: #0f0d09;
+      --code-ink: #f1ead9;
+      --code-accent: #e0a458;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg: #17150f;
+    --surface: #201d16;
+    --surface-alt: #29251b;
+    --border: #3a3527;
+    --ink: #f1ead9;
+    --ink-soft: #c7bfa8;
+    --ink-faint: #948c74;
+    --accent: #e0a458;
+    --accent-soft: #3a2f1c;
+    --accent-ink: #f0c690;
+    --replace: #e08a5c;
+    --add: #7cbf94;
+    --code-bg: #0f0d09;
+    --code-ink: #f1ead9;
+    --code-accent: #e0a458;
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  body{
+    margin:0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Source Sans 3", -apple-system, "Segoe UI", sans-serif;
+    padding-inline: 20px;
+  }
+  h1,h2,h3{ font-family: "Fraunces", Georgia, serif; text-wrap: balance; }
+  code, .mono{ font-family: "JetBrains Mono", ui-monospace, Menlo, monospace; }
+
+  .wrap{
+    max-width: 1180px;
+    margin: 0 auto;
+    padding-block: 40px 80px;
+    display: grid;
+    grid-template-columns: 250px minmax(0,1fr);
+    gap: 40px;
+    align-items: start;
+  }
+
+  /* ---- Header ---- */
+  header.hero{
+    grid-column: 1 / -1;
+    padding-block: 4px 8px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 8px;
+  }
+  .eyebrow{
+    font-family: "JetBrains Mono", monospace;
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent-ink);
+    background: var(--accent-soft);
+    display: inline-block;
+    padding: 3px 9px;
+    border-radius: 3px;
+    margin-bottom: 14px;
+  }
+  h1{
+    font-size: clamp(32px, 5vw, 46px);
+    font-weight: 600;
+    margin: 0 0 10px;
+    letter-spacing: -0.01em;
+  }
+  .lede{
+    color: var(--ink-soft);
+    font-size: 17px;
+    line-height: 1.6;
+    max-width: 62ch;
+    margin: 0 0 22px;
+  }
+
+  /* ---- Legend row ---- */
+  .legend{
+    display:flex;
+    flex-wrap: wrap;
+    gap: 10px 22px;
+    padding-block: 16px 22px;
+    font-size: 13.5px;
+    color: var(--ink-soft);
+  }
+  .legend span{ display:inline-flex; align-items:center; gap:7px; }
+  .swatch{ width:11px; height:11px; border-radius: 3px; flex: none; }
+  .swatch.core{ background: var(--accent); }
+  .swatch.replace{ background: var(--replace); }
+  .swatch.add{ background: var(--add); }
+
+  /* ---- Sidebar nav ---- */
+  nav.toc{
+    position: sticky;
+    top: max(20px, env(safe-area-inset-top, 0px));
+    align-self: start;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding-right: 8px;
+  }
+  nav.toc .cat-label{
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin: 18px 0 6px;
+  }
+  nav.toc .cat-label:first-child{ margin-top: 4px; }
+  nav.toc a{
+    color: var(--ink-soft);
+    text-decoration: none;
+    font-size: 14px;
+    padding: 5px 10px;
+    border-radius: 6px;
+    border-left: 2px solid transparent;
+    transition: background 0.15s, color 0.15s;
+  }
+  nav.toc a:hover{ background: var(--surface-alt); color: var(--ink); }
+  nav.toc a code{ font-size: 13px; }
+
+  /* ---- Main content ---- */
+  main{ min-width: 0; }
+  section.category{ margin-bottom: 44px; }
+  section.category > h2{
+    font-size: 22px;
+    font-weight: 600;
+    margin: 0 0 6px;
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+  section.category > h2 .num{
+    font-family: "JetBrains Mono", monospace;
+    font-size: 13px;
+    color: var(--ink-faint);
+    font-weight: 400;
+  }
+  section.category > p.cat-desc{
+    color: var(--ink-soft);
+    font-size: 14.5px;
+    margin: 0 0 20px;
+    max-width: 68ch;
+    line-height: 1.55;
+  }
+
+  .card{
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px 22px 22px;
+    margin-bottom: 16px;
+    scroll-margin-top: 24px;
+  }
+  .card-head{
+    display:flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 6px;
+  }
+  .fn-name{
+    font-family: "JetBrains Mono", monospace;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--accent-ink);
+  }
+  .tag{
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10.5px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 999px;
+    border: 1px solid currentColor;
+  }
+  .tag.filtre{ color: var(--replace); }
+  .tag.agregat{ color: var(--add); }
+  .tag.central{ color: var(--accent-ink); background: var(--accent-soft); border-color: transparent; }
+
+  .role{
+    font-size: 15px;
+    color: var(--ink);
+    margin: 4px 0 14px;
+    line-height: 1.5;
+  }
+
+  .syntax{
+    background: var(--code-bg);
+    color: var(--code-ink);
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 13.5px;
+    overflow-x: auto;
+    margin-bottom: 14px;
+    line-height: 1.55;
+  }
+  .syntax .k{ color: var(--code-accent); }
+
+  .detail-grid{
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 14px 20px;
+  }
+  .detail-grid h4{
+    margin: 0 0 5px;
+    font-size: 11.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink-faint);
+    font-weight: 600;
+  }
+  .detail-grid p{
+    margin: 0;
+    font-size: 14px;
+    color: var(--ink-soft);
+    line-height: 1.55;
+  }
+
+  .callback{
+    margin-top: 14px;
+    padding: 10px 14px;
+    background: var(--surface-alt);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 6px 6px 0;
+    font-size: 13.5px;
+    color: var(--ink-soft);
+    line-height: 1.5;
+  }
+  .callback b{ color: var(--ink); }
+
+  footer{
+    grid-column: 1 / -1;
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    font-size: 13px;
+    color: var(--ink-faint);
+  }
+
+  /* ---- Mobile ---- */
+  @media (max-width: 860px){
+    .wrap{ grid-template-columns: 1fr; padding-block: 28px 60px; gap: 22px; }
+    nav.toc{
+      position: static;
+      flex-direction: row;
+      flex-wrap: wrap;
+      gap: 6px;
+      padding: 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+    }
+    nav.toc .cat-label{ display:none; }
+    nav.toc a{ border: 1px solid var(--border); }
+  }
+</style>
+
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+<div class="wrap">
+
+  <header class="hero">
+    <span class="eyebrow">Power BI · DAX</span>
+    <h1>Grammaire DAX</h1>
+    <p class="lede">Le rôle exact de chaque fonction qui gouverne le contexte de filtre — CALCULATE en pivot, ses modificateurs autour, et les cas où on les combine. À garder sous la main pendant l'écriture de mesures.</p>
+    <div class="legend">
+      <span><i class="swatch core"></i> Fonction centrale</span>
+      <span><i class="swatch replace"></i> Modificateur de filtre</span>
+      <span><i class="swatch add"></i> Agrégation / calcul</span>
+    </div>
+  </header>
+
+  <nav class="toc" aria-label="Sommaire">
+    <div class="cat-label">Le pivot</div>
+    <a href="#calculate"><code>CALCULATE</code></a>
+
+    <div class="cat-label">Supprimer des filtres</div>
+    <a href="#all"><code>ALL</code></a>
+    <a href="#allexcept"><code>ALLEXCEPT</code></a>
+    <a href="#allselected"><code>ALLSELECTED</code></a>
+    <a href="#removefilters"><code>REMOVEFILTERS</code></a>
+
+    <div class="cat-label">Ajouter sans remplacer</div>
+    <a href="#keepfilters"><code>KEEPFILTERS</code></a>
+    <a href="#filter"><code>FILTER</code></a>
+
+    <div class="cat-label">Agréger ligne à ligne</div>
+    <a href="#sumx"><code>SUMX</code></a>
+    <a href="#divide"><code>DIVIDE</code></a>
+    <a href="#rankx"><code>RANKX</code></a>
+
+    <div class="cat-label">Chronologie</div>
+    <a href="#calendar"><code>CALENDAR</code></a>
+    <a href="#sameperiodlastyear"><code>SAMEPERIODLASTYEAR</code></a>
+    <a href="#dateadd"><code>DATEADD</code></a>
+    <a href="#totalytd"><code>TOTALYTD</code></a>
+    <a href="#datesytd"><code>DATESYTD</code></a>
+    <a href="#parallelperiod"><code>PARALLELPERIOD</code></a>
+    <a href="#firstdate"><code>FIRSTDATE</code> / <code>LASTDATE</code></a>
+
+    <div class="cat-label">Relations &amp; sécurité</div>
+    <a href="#userelationship"><code>USERELATIONSHIP</code></a>
+    <a href="#lookupvalue"><code>LOOKUPVALUE</code></a>
+    <a href="#userprincipalname"><code>USERPRINCIPALNAME</code></a>
+
+    <div class="cat-label">Tester le contexte</div>
+    <a href="#values"><code>VALUES</code></a>
+    <a href="#selectedvalue"><code>SELECTEDVALUE</code></a>
+    <a href="#hasonevalue"><code>HASONEVALUE</code></a>
+    <a href="#isblank"><code>ISBLANK</code> / <code>ISFILTERED</code></a>
+
+    <div class="cat-label">Logique conditionnelle</div>
+    <a href="#if"><code>IF</code></a>
+    <a href="#switch"><code>SWITCH</code></a>
+
+    <div class="cat-label">Agrégations complémentaires</div>
+    <a href="#countrows"><code>COUNTROWS</code></a>
+    <a href="#countx"><code>COUNTX</code> &amp; cie</a>
+    <a href="#distinctcount"><code>DISTINCTCOUNT</code></a>
+    <a href="#topn"><code>TOPN</code></a>
+
+    <div class="cat-label">Relations entre tables</div>
+    <a href="#related"><code>RELATED</code></a>
+    <a href="#relatedtable"><code>RELATEDTABLE</code></a>
+    <a href="#treatas"><code>TREATAS</code></a>
+
+    <div class="cat-label">Écriture &amp; texte</div>
+    <a href="#var"><code>VAR / RETURN</code></a>
+    <a href="#concatenatex"><code>CONCATENATEX</code></a>
+  </nav>
+
+  <main>
+
+    <section class="category" id="cat-pivot">
+      <h2><span class="num">01</span> Le pivot</h2>
+      <p class="cat-desc">Toutes les autres fonctions de cette page existent pour modifier ce que CALCULATE voit. Comprendre celle-ci en premier rend le reste évident.</p>
+
+      <article class="card" id="calculate">
+        <div class="card-head">
+          <span class="fn-name">CALCULATE</span>
+          <span class="tag central">Fonction centrale</span>
+        </div>
+        <p class="role">Évalue une expression après avoir modifié le contexte de filtre. Rien ne se calcule "dans le vide" — CALCULATE change d'abord les règles, puis laisse l'agrégation s'exécuter dans ce nouveau cadre.</p>
+        <div class="syntax"><span class="k">CALCULATE</span>(&lt;expression&gt;, &lt;filtre1&gt;, &lt;filtre2&gt;, …)</div>
+        <div class="detail-grid">
+          <div><h4>Comportement par défaut</h4><p>Un filtre sur une colonne déjà filtrée par le contexte existant la <b>remplace</b>. Sur une colonne différente, il s'<b>ajoute</b>.</p></div>
+          <div><h4>Effet de bord</h4><p>Dans un contexte de ligne (colonne calculée, SUMX), CALCULATE déclenche la <i>context transition</i> : chaque colonne de la ligne devient un filtre.</p></div>
+          <div><h4>À retenir</h4><p>Toutes les fonctions ci-dessous ne servent qu'à une chose : changer ce que CALCULATE filtre, avant qu'il n'agrège.</p></div>
+        </div>
+      </article>
+    </section>
+
+    <section class="category" id="cat-remove">
+      <h2><span class="num">02</span> Supprimer des filtres</h2>
+      <p class="cat-desc">Ces fonctions élargissent la vue : elles retirent tout ou partie du contexte de filtre pour calculer une référence, un total général ou une part du tout.</p>
+
+      <article class="card" id="all">
+        <div class="card-head">
+          <span class="fn-name">ALL</span>
+          <span class="tag filtre">Modificateur de filtre</span>
+        </div>
+        <p class="role">Supprime les filtres sur une table entière ou une colonne précise. Sert à "voir au-delà" du filtre actuel — total général, référence globale, dénominateur d'un pourcentage.</p>
+        <div class="syntax"><span class="k">ALL</span>(Table)  <span style="color:var(--ink-faint)">— retire tous les filtres de la table</span><br><span class="k">ALL</span>(Table[Colonne])  <span style="color:var(--ink-faint)">— retire le filtre sur cette colonne seulement</span></div>
+        <div class="detail-grid">
+          <div><h4>Usage classique</h4><p>Dénominateur d'un % du total : <code>CALCULATE(SUM(…), ALL(Table))</code>.</p></div>
+          <div><h4>Piège</h4><p><code>ALL(Table)</code> et <code>ALL(Colonne)</code> n'ont pas le même rayon d'action — le premier ignore aussi les autres colonnes filtrées.</p></div>
+        </div>
+      </article>
+
+      <article class="card" id="allexcept">
+        <div class="card-head">
+          <span class="fn-name">ALLEXCEPT</span>
+          <span class="tag filtre">Modificateur de filtre</span>
+        </div>
+        <p class="role">Supprime tous les filtres d'une table, sauf ceux listés en exception. Raccourci pratique quand on veut garder un seul axe de filtrage actif.</p>
+        <div class="syntax"><span class="k">ALLEXCEPT</span>(Table, Table[ColonneÀGarder])</div>
+        <div class="callback"><b>Équivalence :</b> <code>ALLEXCEPT(T, T[X])</code> revient à écrire <code>ALL(T)</code> puis à réintroduire manuellement le filtre sur <code>X</code> — c'est un raccourci d'écriture, pas un mécanisme différent.</div>
+      </article>
+
+      <article class="card" id="allselected">
+        <div class="card-head">
+          <span class="fn-name">ALLSELECTED</span>
+          <span class="tag filtre">Modificateur de filtre</span>
+        </div>
+        <p class="role">Retire les filtres du visuel courant, mais conserve ceux venant des slicers et des interactions externes. Utile pour un "total visible" qui respecte la sélection de l'utilisateur sans respecter chaque ligne du tableau.</p>
+        <div class="syntax"><span class="k">ALLSELECTED</span>()  <span style="color:var(--ink-faint)">/ ALLSELECTED(Table ou Colonne)</span></div>
+        <div class="detail-grid">
+          <div><h4>Différence avec ALL</h4><p>ALL ignore tout, y compris les slicers. ALLSELECTED garde ce que l'utilisateur a choisi hors du visuel.</p></div>
+        </div>
+      </article>
+
+      <article class="card" id="removefilters">
+        <div class="card-head">
+          <span class="fn-name">REMOVEFILTERS</span>
+          <span class="tag filtre">Modificateur de filtre</span>
+        </div>
+        <p class="role">Équivalent moderne et plus explicite de ALL utilisé comme suppresseur de filtre — le nom dit directement l'intention, ce qui rend le DAX plus lisible en relecture.</p>
+        <div class="syntax"><span class="k">REMOVEFILTERS</span>(Table)  <span style="color:var(--ink-faint)">ou REMOVEFILTERS(Colonne)</span></div>
+      </article>
+    </section>
+
+    <section class="category" id="cat-add">
+      <h2><span class="num">03</span> Ajouter sans remplacer</h2>
+      <p class="cat-desc">À l'inverse du groupe précédent, ces fonctions affinent le contexte au lieu de l'effacer — elles restreignent l'ensemble des lignes visibles.</p>
+
+      <article class="card" id="keepfilters">
+        <div class="card-head">
+          <span class="fn-name">KEEPFILTERS</span>
+          <span class="tag filtre">Modificateur de filtre</span>
+        </div>
+        <p class="role">Empêche le comportement par défaut de CALCULATE. Au lieu de remplacer un filtre existant sur la même colonne, le nouveau filtre s'ajoute — l'intersection des deux s'applique.</p>
+        <div class="syntax"><span class="k">CALCULATE</span>(expr, <span class="k">KEEPFILTERS</span>(Table[Colonne] = valeur))</div>
+        <div class="callback">Sans KEEPFILTERS, une ligne "Table" filtrée par CALCULATE sur "Chaise" afficherait quand même un résultat sur la ligne "Table" du visuel. Avec KEEPFILTERS, l'intersection Table ∩ Chaise est vide → résultat 0.</div>
+      </article>
+
+      <article class="card" id="filter">
+        <div class="card-head">
+          <span class="fn-name">FILTER</span>
+          <span class="tag agregat">Agrégation / calcul</span>
+        </div>
+        <p class="role">Retourne une table restreinte aux lignes qui vérifient une condition. S'utilise en argument de CALCULATE quand le filtre est trop complexe pour une simple expression booléenne.</p>
+        <div class="syntax"><span class="k">FILTER</span>(Table, condition)</div>
+        <div class="detail-grid">
+          <div><h4>Exemple</h4><p><code>CALCULATE(SUM(Ventes[Montant]), FILTER(Ventes, Ventes[Montant] &gt; 100))</code></p></div>
+          <div><h4>Coût</h4><p>Parcourt la table ligne à ligne — à réserver aux conditions qu'une expression simple ne peut pas exprimer.</p></div>
+        </div>
+      </article>
+    </section>
+
+    <section class="category" id="cat-rowagg">
+      <h2><span class="num">04</span> Agréger ligne à ligne</h2>
+      <p class="cat-desc">Trois fonctions d'usage quotidien, indépendantes du mécanisme de filtrage mais omniprésentes dans les mêmes mesures.</p>
+
+      <article class="card" id="sumx">
+        <div class="card-head">
+          <span class="fn-name">SUMX</span>
+          <span class="tag agregat">Agrégation / calcul</span>
+        </div>
+        <p class="role">Parcourt une table ligne par ligne, évalue une expression pour chacune, puis additionne les résultats. Indispensable dès que le calcul par ligne n'est pas une simple colonne existante (ex : quantité × prix unitaire).</p>
+        <div class="syntax"><span class="k">SUMX</span>(Table, expression_par_ligne)</div>
+        <div class="detail-grid">
+          <div><h4>Exemple</h4><p><code>SUMX(Ventes, Ventes[Quantité] * Ventes[PrixUnitaire])</code></p></div>
+        </div>
+      </article>
+
+      <article class="card" id="divide">
+        <div class="card-head">
+          <span class="fn-name">DIVIDE</span>
+          <span class="tag agregat">Agrégation / calcul</span>
+        </div>
+        <p class="role">Division sécurisée : retourne un résultat alternatif (0 par défaut) au lieu d'une erreur quand le dénominateur vaut zéro ou est vide. À utiliser systématiquement à la place de l'opérateur <code>/</code>.</p>
+        <div class="syntax"><span class="k">DIVIDE</span>(numérateur, dénominateur, [résultat_si_zéro])</div>
+      </article>
+
+      <article class="card" id="rankx">
+        <div class="card-head">
+          <span class="fn-name">RANKX</span>
+          <span class="tag agregat">Agrégation / calcul</span>
+        </div>
+        <p class="role">Calcule le rang d'une valeur au sein d'une table, selon une expression de tri. Utile pour classer produits, régions ou clients par performance.</p>
+        <div class="syntax"><span class="k">RANKX</span>(Table, expression, [valeur], [ordre], [égalités])</div>
+        <div class="detail-grid">
+          <div><h4>Exemple</h4><p><code>RANKX(ALL(Produit), CALCULATE(SUM(Ventes[Montant])))</code></p></div>
+          <div><h4>Piège fréquent</h4><p>Oublier <code>ALL</code> autour de la table de classement — sans lui, chaque ligne se retrouve seule dans son propre contexte et le rang vaut toujours 1.</p></div>
+        </div>
+      </article>
+    </section>
+
+    <section class="category" id="cat-time">
+      <h2><span class="num">05</span> Chronologie</h2>
+      <p class="cat-desc">Ces fonctions ne fonctionnent correctement qu'avec une vraie table de dates, marquée comme telle dans le modèle, sans trou sur la plage couverte.</p>
+
+      <article class="card" id="calendar">
+        <div class="card-head">
+          <span class="fn-name">CALENDAR</span>
+          <span class="tag agregat">Agrégation / calcul</span>
+        </div>
+        <p class="role">Génère une table à une colonne (<code>Date</code>) contenant une ligne par jour entre deux dates. C'est la fonction qui construit la table de dates elle-même — préalable indispensable à toutes les fonctions ci-dessous.</p>
+        <div class="syntax"><span class="k">CALENDAR</span>(date_début, date_fin)  <span style="color:var(--ink-faint)">— bornes fixes</span><br><span class="k">CALENDARAUTO</span>([mois_fin_année])  <span style="color:var(--ink-faint)">— bornes déduites des dates déjà présentes dans le modèle</span></div>
+
+        <div class="detail-grid" style="margin-bottom:14px;">
+          <div><h4>1. Créer la table</h4><p>Nouvelle table calculée, dans la vue Modèle ou Données : <b>Modélisation &gt; Nouvelle table</b>.</p></div>
+          <div><h4>2. Écrire la formule</h4><p><code>Dates = CALENDAR(DATE(2020,1,1), DATE(2026,12,31))</code>, ou plus simple : <code>Dates = CALENDARAUTO()</code></p></div>
+          <div><h4>3. Enrichir avec des colonnes</h4><p>Ajouter Année, Mois, Trimestre, Jour de semaine… en colonnes calculées sur cette même table.</p></div>
+          <div><h4>4. Marquer comme table de dates</h4><p>Clic droit sur la table &gt; <b>Marquer comme table de dates</b> &gt; choisir la colonne <code>Date</code>. Sans cette étape, les fonctions de Time Intelligence peuvent donner des résultats faux.</p></div>
+          <div><h4>5. Relier au modèle</h4><p>Créer la relation <code>Dates[Date]</code> → <code>Fait_Ventes[DateCommande]</code> (1:*), filtrage à sens unique, comme n'importe quelle dimension du schéma en étoile.</p></div>
+        </div>
+
+        <div class="syntax">Année = YEAR(Dates[Date])
+Mois = FORMAT(Dates[Date], "MMMM")
+NuméroMois = MONTH(Dates[Date])
+Trimestre = "T" &amp; FORMAT(Dates[Date], "Q")
+JourSemaine = FORMAT(Dates[Date], "dddd")</div>
+
+        <div class="callback"><b>Pourquoi une table dédiée plutôt que la date déjà présente dans Fait_Ventes :</b> une table de dates indépendante couvre une plage continue (aucun jour manquant, même sans vente ce jour-là), peut être partagée par plusieurs tables de faits, et sert d'ancrage unique pour tout le Time Intelligence du modèle.</div>
+      </article>
+
+      <article class="card" id="sameperiodlastyear">
+        <div class="card-head">
+          <span class="fn-name">SAMEPERIODLASTYEAR</span>
+          <span class="tag filtre">Modificateur de filtre</span>
+        </div>
+        <p class="role">Génère une table de dates décalée d'un an en arrière, que CALCULATE utilise ensuite comme nouveau filtre sur la table de dates. Base de toute comparaison "vs année précédente".</p>
+        <div class="syntax"><span class="k">CALCULATE</span>(SUM(Ventes[Montant]), <span class="k">SAMEPERIODLASTYEAR</span>(Dates[Date]))</div>
+      </article>
+
+      <article class="card" id="dateadd">
+        <div class="card-head">
+          <span class="fn-name">DATEADD</span>
+          <span class="tag filtre">Modificateur de filtre</span>
+        </div>
+        <p class="role">Décale la table de dates d'un nombre d'unités choisi (jour, mois, trimestre, année) — plus flexible que SAMEPERIODLASTYEAR, qui n'est qu'un cas particulier de DATEADD sur un an.</p>
+        <div class="syntax"><span class="k">DATEADD</span>(Dates[Date], -1, MONTH)</div>
+      </article>
+
+      <article class="card" id="totalytd">
+        <div class="card-head">
+          <span class="fn-name">TOTALYTD</span>
+          <span class="tag agregat">Agrégation / calcul</span>
+        </div>
+        <p class="role">Cumul depuis le début de l'année civile (ou fiscale) jusqu'à la dernière date du contexte de filtre. Combine en une seule fonction une agrégation et un filtre implicite sur la table de dates.</p>
+        <div class="syntax"><span class="k">TOTALYTD</span>(SUM(Ventes[Montant]), Dates[Date])</div>
+      </article>
+
+      <article class="card" id="datesytd">
+        <div class="card-head">
+          <span class="fn-name">DATESYTD</span>
+          <span class="tag filtre">Modificateur de filtre</span>
+        </div>
+        <p class="role">Retourne une table des dates depuis le début de l'année jusqu'à la dernière date du contexte, au lieu d'un résultat direct comme TOTALYTD. S'utilise comme argument de CALCULATE quand on veut plus de contrôle que TOTALYTD n'en offre.</p>
+        <div class="syntax"><span class="k">CALCULATE</span>(SUM(Ventes[Montant]), <span class="k">DATESYTD</span>(Dates[Date]))</div>
+        <div class="callback">Mêmes cousines pour d'autres granularités : <code>DATESQTD</code> (depuis le début du trimestre) et <code>DATESMTD</code> (depuis le début du mois).</div>
+      </article>
+
+      <article class="card" id="parallelperiod">
+        <div class="card-head">
+          <span class="fn-name">PARALLELPERIOD</span>
+          <span class="tag filtre">Modificateur de filtre</span>
+        </div>
+        <p class="role">Décale la table de dates d'un nombre entier de périodes complètes (mois, trimestre, année) — contrairement à DATEADD, qui décale jour pour jour, PARALLELPERIOD ramène toujours la période entière correspondante.</p>
+        <div class="syntax"><span class="k">PARALLELPERIOD</span>(Dates[Date], -1, QUARTER)</div>
+
+        <div class="callback" style="margin-top:14px; margin-bottom:14px;"><b>Différence concrète :</b> avec un contexte filtré sur les 10 premiers jours de février, <code>DATEADD(…, -1, MONTH)</code> retourne les 10 premiers jours de janvier (même tranche décalée), tandis que <code>PARALLELPERIOD(…, -1, MONTH)</code> retourne <b>tout le mois de janvier</b> — 31 jours, peu importe la tranche filtrée au départ.</div>
+
+        <h4 style="margin:0 0 6px; font-size:11.5px; text-transform:uppercase; letter-spacing:0.06em; color:var(--ink-faint); font-weight:600;">Exemple à tester dans DAX.do</h4>
+        <div class="syntax">DEFINE
+    TABLE Ventes =
+        ADDCOLUMNS(
+            CALENDAR(DATE(2026,1,1), DATE(2026,2,28)),
+            "Montant", MOD(DAY([Date]), 4) * 25 + 40
+        )
+
+EVALUATE
+ROW(
+    "Ventes réelles (1-10 fév)",
+        <span class="k">CALCULATE</span>(
+            SUM(Ventes[Montant]),
+            Ventes[Date] >= DATE(2026,2,1) &amp;&amp; Ventes[Date] &lt;= DATE(2026,2,10)
+        ),
+
+    "DATEADD -1 mois",
+        <span class="k">CALCULATE</span>(
+            <span class="k">CALCULATE</span>(SUM(Ventes[Montant]), <span class="k">DATEADD</span>(Ventes[Date], -1, MONTH)),
+            Ventes[Date] >= DATE(2026,2,1) &amp;&amp; Ventes[Date] &lt;= DATE(2026,2,10)
+        ),
+
+    "PARALLELPERIOD -1 mois",
+        <span class="k">CALCULATE</span>(
+            <span class="k">CALCULATE</span>(SUM(Ventes[Montant]), <span class="k">PARALLELPERIOD</span>(Ventes[Date], -1, MONTH)),
+            Ventes[Date] >= DATE(2026,2,1) &amp;&amp; Ventes[Date] &lt;= DATE(2026,2,10)
+        ),
+
+    "Vérification : tout janvier (réel)",
+        <span class="k">CALCULATE</span>(
+            SUM(Ventes[Montant]),
+            Ventes[Date] >= DATE(2026,1,1) &amp;&amp; Ventes[Date] &lt;= DATE(2026,1,31)
+        )
+)</div>
+
+        <div class="detail-grid">
+          <div><h4>Pourquoi le CALCULATE imbriqué</h4><p>Le CALCULATE extérieur simule le filtre d'un visuel (1-10 février). Le CALCULATE intérieur applique DATEADD/PARALLELPERIOD sur ce contexte déjà établi — exactement le mécanisme d'une mesure de comparaison temporelle dans un vrai rapport.</p></div>
+          <div><h4>Résultat attendu</h4><p>DATEADD ≠ PARALLELPERIOD : le premier reste sur 10 jours, le second ramène les 31 jours de janvier, identique à la ligne de vérification.</p></div>
+        </div>
+      </article>
+
+      <article class="card" id="firstdate">
+        <div class="card-head">
+          <span class="fn-name">FIRSTDATE / LASTDATE</span>
+          <span class="tag agregat">Agrégation / calcul</span>
+        </div>
+        <p class="role">Retournent respectivement la première et la dernière date visibles dans le contexte de filtre actuel. Utiles pour afficher un solde de fin de période (stock, effectif) plutôt qu'une somme.</p>
+        <div class="syntax"><span class="k">CALCULATE</span>(SUM(Stock[Quantité]), <span class="k">LASTDATE</span>(Dates[Date]))</div>
+      </article>
+    </section>
+
+    <section class="category" id="cat-security">
+      <h2><span class="num">06</span> Relations &amp; sécurité</h2>
+      <p class="cat-desc">Fonctions rencontrées dès qu'on sort du schéma en étoile standard — relations inactives, recherches croisées, sécurité au niveau ligne.</p>
+
+      <article class="card" id="userelationship">
+        <div class="card-head">
+          <span class="fn-name">USERELATIONSHIP</span>
+          <span class="tag filtre">Modificateur de filtre</span>
+        </div>
+        <p class="role">Active ponctuellement, dans une seule mesure, une relation marquée comme inactive dans le modèle. Utile quand deux relations existent entre les deux mêmes tables (ex : date de commande vs date de livraison) et qu'une seule peut être active à la fois.</p>
+        <div class="syntax"><span class="k">CALCULATE</span>(SUM(Ventes[Montant]), <span class="k">USERELATIONSHIP</span>(Ventes[DateLivraison], Dates[Date]))</div>
+      </article>
+
+      <article class="card" id="lookupvalue">
+        <div class="card-head">
+          <span class="fn-name">LOOKUPVALUE</span>
+          <span class="tag agregat">Agrégation / calcul</span>
+        </div>
+        <p class="role">Recherche une valeur dans une table selon une ou plusieurs conditions de correspondance — l'équivalent DAX d'un RECHERCHEV multi-critères. Fréquent dans les règles de sécurité au niveau ligne (RLS).</p>
+        <div class="syntax"><span class="k">LOOKUPVALUE</span>(Table[ColonneRésultat], Table[ColonneClé], valeur_recherchée)</div>
+      </article>
+
+      <article class="card" id="userprincipalname">
+        <div class="card-head">
+          <span class="fn-name">USERPRINCIPALNAME</span>
+          <span class="tag agregat">Agrégation / calcul</span>
+        </div>
+        <p class="role">Retourne l'identifiant (généralement l'e-mail) de l'utilisateur connecté au Power BI Service. Pierre angulaire du RLS dynamique : combinée à une table de mapping et LOOKUPVALUE, elle évite de créer un rôle par utilisateur.</p>
+        <div class="syntax">[Email] = <span class="k">USERPRINCIPALNAME</span>()</div>
+      </article>
+    </section>
+
+    <section class="category" id="cat-context">
+      <h2><span class="num">07</span> Tester le contexte</h2>
+      <p class="cat-desc">Avant d'agir sur un contexte de filtre, on a souvent besoin de savoir ce qu'il contient — une valeur, plusieurs, ou aucune.</p>
+
+      <article class="card" id="values">
+        <div class="card-head">
+          <span class="fn-name">VALUES</span>
+          <span class="tag agregat">Agrégation / calcul</span>
+        </div>
+        <p class="role">Retourne les valeurs distinctes d'une colonne visibles dans le contexte de filtre actuel, sous forme de table. Sert de base à beaucoup de fonctions qui attendent une table plutôt qu'une valeur scalaire.</p>
+        <div class="syntax"><span class="k">VALUES</span>(Table[Colonne])</div>
+      </article>
+
+      <article class="card" id="selectedvalue">
+        <div class="card-head">
+          <span class="fn-name">SELECTEDVALUE</span>
+          <span class="tag agregat">Agrégation / calcul</span>
+        </div>
+        <p class="role">Retourne la valeur unique d'une colonne si le contexte n'en montre qu'une, sinon une valeur par défaut. Remplace avantageusement la combinaison IF + HASONEVALUE + VALUES, en une seule fonction.</p>
+        <div class="syntax"><span class="k">SELECTEDVALUE</span>(Table[Colonne], [valeur_par_défaut])</div>
+      </article>
+
+      <article class="card" id="hasonevalue">
+        <div class="card-head">
+          <span class="fn-name">HASONEVALUE</span>
+          <span class="tag agregat">Agrégation / calcul</span>
+        </div>
+        <p class="role">Teste si une colonne n'affiche qu'une seule valeur distincte dans le contexte actuel. Retourne VRAI/FAUX — s'emploie typiquement dans un IF pour choisir un affichage selon le niveau de détail sélectionné.</p>
+        <div class="syntax"><span class="k">HASONEVALUE</span>(Table[Colonne])</div>
+      </article>
+
+      <article class="card" id="isblank">
+        <div class="card-head">
+          <span class="fn-name">ISBLANK / ISFILTERED</span>
+          <span class="tag agregat">Agrégation / calcul</span>
+        </div>
+        <p class="role">ISBLANK teste si une expression est vide. ISFILTERED teste si une colonne est activement filtrée (par opposition à seulement présente dans le modèle). Deux tests de garde fréquents avant un calcul.</p>
+        <div class="syntax"><span class="k">ISBLANK</span>(expression)  ·  <span class="k">ISFILTERED</span>(Table[Colonne])</div>
+      </article>
+    </section>
+
+    <section class="category" id="cat-logic">
+      <h2><span class="num">08</span> Logique conditionnelle</h2>
+      <p class="cat-desc">Deux fonctions pour brancher un calcul selon une condition — la seconde évite l'empilement d'IF imbriqués.</p>
+
+      <article class="card" id="if">
+        <div class="card-head">
+          <span class="fn-name">IF</span>
+          <span class="tag agregat">Agrégation / calcul</span>
+        </div>
+        <p class="role">Condition simple à deux branches. Au-delà de deux ou trois conditions imbriquées, la lisibilité chute vite — c'est le signal pour passer à SWITCH.</p>
+        <div class="syntax"><span class="k">IF</span>(condition, valeur_si_vrai, valeur_si_faux)</div>
+      </article>
+
+      <article class="card" id="switch">
+        <div class="card-head">
+          <span class="fn-name">SWITCH</span>
+          <span class="tag agregat">Agrégation / calcul</span>
+        </div>
+        <p class="role">Évalue une expression et la compare à une liste de valeurs possibles, avec un résultat associé à chacune. Remplace une chaîne d'IF imbriqués par une structure plate et lisible.</p>
+        <div class="syntax"><span class="k">SWITCH</span>(expression, valeur1, résultat1, valeur2, résultat2, …, [résultat_par_défaut])</div>
+        <div class="callback"><b>Variante fréquente :</b> <code>SWITCH(TRUE(), condition1, résultat1, condition2, résultat2, …)</code> — reproduit un IF imbriqué tout en gardant la lisibilité de SWITCH.</div>
+      </article>
+    </section>
+
+    <section class="category" id="cat-moreagg">
+      <h2><span class="num">09</span> Agrégations complémentaires</h2>
+      <p class="cat-desc">Les autres fonctions de comptage et de classement qu'on croise aussi souvent que SUM et SUMX.</p>
+
+      <article class="card" id="countrows">
+        <div class="card-head">
+          <span class="fn-name">COUNTROWS</span>
+          <span class="tag agregat">Agrégation / calcul</span>
+        </div>
+        <p class="role">Compte les lignes d'une table — souvent une table de faits filtrée, ou le résultat d'un FILTER/VALUES. Plus rapide que COUNT sur une colonne quand seul le nombre de lignes compte.</p>
+        <div class="syntax"><span class="k">COUNTROWS</span>(Table)</div>
+      </article>
+
+      <article class="card" id="countx">
+        <div class="card-head">
+          <span class="fn-name">COUNTX / AVERAGEX / MAXX / MINX</span>
+          <span class="tag agregat">Agrégation / calcul</span>
+        </div>
+        <p class="role">Les cousins de SUMX : même principe d'itération ligne à ligne sur une table, suivi respectivement d'un comptage, d'une moyenne, d'un maximum ou d'un minimum des résultats obtenus.</p>
+        <div class="syntax"><span class="k">AVERAGEX</span>(Ventes, Ventes[Quantité] * Ventes[PrixUnitaire])</div>
+      </article>
+
+      <article class="card" id="distinctcount">
+        <div class="card-head">
+          <span class="fn-name">DISTINCTCOUNT</span>
+          <span class="tag agregat">Agrégation / calcul</span>
+        </div>
+        <p class="role">Compte le nombre de valeurs distinctes d'une colonne dans le contexte actuel — par exemple le nombre de clients uniques ayant acheté, plutôt que le nombre de lignes de vente.</p>
+        <div class="syntax"><span class="k">DISTINCTCOUNT</span>(Ventes[ID_Client])</div>
+      </article>
+
+      <article class="card" id="topn">
+        <div class="card-head">
+          <span class="fn-name">TOPN</span>
+          <span class="tag agregat">Agrégation / calcul</span>
+        </div>
+        <p class="role">Retourne les N premières lignes d'une table selon un critère de tri. Combinée à SUMX, elle permet de calculer un total limité aux meilleurs éléments (ex : somme des 5 plus gros clients).</p>
+        <div class="syntax"><span class="k">TOPN</span>(5, Clients, [Ventes Totales], DESC)</div>
+      </article>
+    </section>
+
+    <section class="category" id="cat-relations">
+      <h2><span class="num">10</span> Relations entre tables</h2>
+      <p class="cat-desc">Trois façons de traverser une relation du modèle sans forcément passer par CALCULATE.</p>
+
+      <article class="card" id="related">
+        <div class="card-head">
+          <span class="fn-name">RELATED</span>
+          <span class="tag agregat">Agrégation / calcul</span>
+        </div>
+        <p class="role">Récupère une colonne depuis la table liée du côté « un » d'une relation, depuis un contexte de ligne du côté « plusieurs ». Utilisable dans une colonne calculée sans écrire de CALCULATE.</p>
+        <div class="syntax"><span class="k">RELATED</span>(Dim_Produit[Catégorie])</div>
+      </article>
+
+      <article class="card" id="relatedtable">
+        <div class="card-head">
+          <span class="fn-name">RELATEDTABLE</span>
+          <span class="tag agregat">Agrégation / calcul</span>
+        </div>
+        <p class="role">Le sens inverse de RELATED : depuis le côté « un », retourne la table des lignes liées côté « plusieurs ». S'utilise typiquement avec COUNTROWS pour compter des lignes liées (ex : nombre de commandes par client).</p>
+        <div class="syntax"><span class="k">COUNTROWS</span>(<span class="k">RELATEDTABLE</span>(Fait_Ventes))</div>
+      </article>
+
+      <article class="card" id="treatas">
+        <div class="card-head">
+          <span class="fn-name">TREATAS</span>
+          <span class="tag filtre">Modificateur de filtre</span>
+        </div>
+        <p class="role">Applique les valeurs d'une table comme filtre sur les colonnes d'une autre, sans qu'une relation physique existe entre elles dans le modèle — crée une relation virtuelle valable pour la durée du calcul.</p>
+        <div class="syntax"><span class="k">CALCULATE</span>(SUM(Ventes[Montant]), <span class="k">TREATAS</span>(VALUES(TableExterne[Région]), Dim_Région[Nom_Région]))</div>
+      </article>
+    </section>
+
+    <section class="category" id="cat-writing">
+      <h2><span class="num">11</span> Écriture &amp; texte</h2>
+      <p class="cat-desc">Une structure et une fonction qui n'affectent pas le filtrage, mais qui rendent les mesures plus lisibles et plus expressives.</p>
+
+      <article class="card" id="var">
+        <div class="card-head">
+          <span class="fn-name">VAR / RETURN</span>
+          <span class="tag central">Structure</span>
+        </div>
+        <p class="role">Stocke le résultat intermédiaire d'une expression dans une variable nommée, réutilisable ensuite sans être recalculée. Rend les mesures complexes lisibles et évite les répétitions du même sous-calcul.</p>
+        <div class="syntax"><span class="k">VAR</span> TotalActuel = SUM(Ventes[Montant])
+<span class="k">VAR</span> TotalAnnéePrécédente = CALCULATE(SUM(Ventes[Montant]), SAMEPERIODLASTYEAR(Dates[Date]))
+<span class="k">RETURN</span> DIVIDE(TotalActuel - TotalAnnéePrécédente, TotalAnnéePrécédente)</div>
+      </article>
+
+      <article class="card" id="concatenatex">
+        <div class="card-head">
+          <span class="fn-name">CONCATENATEX</span>
+          <span class="tag agregat">Agrégation / calcul</span>
+        </div>
+        <p class="role">Concatène en une seule chaîne les valeurs d'une expression évaluée sur plusieurs lignes, avec un séparateur au choix. Utile pour afficher une liste (ex : les produits d'une commande) dans une seule cellule.</p>
+        <div class="syntax"><span class="k">CONCATENATEX</span>(RELATEDTABLE(Détail_Commande), Détail_Commande[Produit], ", ")</div>
+      </article>
+    </section>
+
+  </main>
+
+  <footer>
+    Répertoire de travail — Perfectionnement Power BI · fonctions DAX centrées sur le contexte de filtre et CALCULATE.
+  </footer>
+
+</div>
